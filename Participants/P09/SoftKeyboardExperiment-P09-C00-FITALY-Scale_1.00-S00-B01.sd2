@@ -1,0 +1,6 @@
+App,Participant,Condition,Keyboard,Keyboard_scale,Session,Block,Phrase,Min_keystrokes,Keystrokes,Efficiency,Characters,Time,MSD,Speed_(wpm),Error_rate_(%),KSPC
+SoftKeyboardExperiment,P09,C00,FITALY,Scale_1.00,S00,B01,1,32,38,0.8421052631578947,32,37.762000,0,10.168953,0.000000,1.187500
+SoftKeyboardExperiment,P09,C00,FITALY,Scale_1.00,S00,B01,2,19,20,0.95,18,22.603000,1,9.556254,5.263158,1.111111
+SoftKeyboardExperiment,P09,C00,FITALY,Scale_1.00,S00,B01,3,35,37,0.9459459459459459,35,45.284000,0,9.274799,0.000000,1.057143
+SoftKeyboardExperiment,P09,C00,FITALY,Scale_1.00,S00,B01,4,28,28,1.0,28,37.467000,0,8.967892,0.000000,1.000000
+SoftKeyboardExperiment,P09,C00,FITALY,Scale_1.00,S00,B01,5,31,31,1.0,31,43.042000,0,8.642721,0.000000,1.000000
