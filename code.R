@@ -8,7 +8,7 @@ cat("\f")                       # clear console
 rm(list = ls(all.names = TRUE)) # clear environment
 
 # Install necessary libraries if not installed yet
-necessary_packages <- c("plyr", "dplyr", "rstatix", "ggplot2", "gt", "webshot", "webshot2")
+necessary_packages <- c("plyr", "dplyr", "rstatix", "ggplot2", "gt", "webshot", "webshot2", "DescTools")
 for (pkg in necessary_packages) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     install.packages(pkg)
@@ -23,6 +23,7 @@ library(ggplot2)
 library(gt)
 library(webshot)
 library(webshot2)
+library(DescTools)
 
 # Obtain current directory path
 root_dir <- getwd()
@@ -92,8 +93,17 @@ outliers <- ordered_data %>%
   identify_outliers(Entry_Speed)
 
 print(outliers)
-outliers_gt <- gt(outliers)#Crear una tabla gt para los outliers
-gtsave(outliers_gt, "outliers_table.png") # Guardar la tabla como una imagen
+
+extreme_outliers <- outliers %>% filter(is.extreme == TRUE)
+
+# Remove extreme outliers
+clean_data <- ordered_data %>% 
+  anti_join(extreme_outliers, by = c("Participant", "Group", "Keyboard", "Trial", "Condition"))
+print(clean_data)
+
+
+# outliers_gt <- gt(outliers)#Crear una tabla gt para los outliers
+# gtsave(outliers_gt, "outliers_table.png") # Guardar la tabla como una imagen
 
 # Normality assumption with Shapiro-Wilk
 normality_test <- ordered_data %>%
@@ -101,8 +111,8 @@ normality_test <- ordered_data %>%
   shapiro_test(Entry_Speed)
 
 print(normality_test)
-normality_test_gt <- gt(normality_test)
-gtsave(normality_test_gt, "normality_test.png") 
+# normality_test_gt <- gt(normality_test)
+# gtsave(normality_test_gt, "normality_test.png") 
 
 
 # Homogeneity of variances assumption between groups using the Levene test
@@ -110,11 +120,8 @@ levene_test <- ordered_data %>%
   levene_test(Entry_Speed ~ Group * Keyboard * Trial)
 
 print(levene_test)
-levene_test_gt <- gt(levene_test)
-gtsave(levene_test_gt, "levene_test.png") 
-
-# need this library when using anova_test and get_anova_table functions
-library(rstatix)
+# levene_test_gt <- gt(levene_test)
+# gtsave(levene_test_gt, "levene_test.png") 
 
 # ANOVA test to evaluate the effect of the group, keyboard and trial combination on the entry_speed
 res.aov = anova_test(
@@ -123,13 +130,29 @@ res.aov = anova_test(
   detailed=TRUE
 )
 
-# Get ANOVA table
+# Get ANOVA table, print in a shorter way the same as the code below
 anova_table <- get_anova_table(res.aov)
 print(anova_table)
 
-# Post hoc tests
-# need the DescTools library to use PostHocTest function
-library(DescTools)
-# do post hoc comparisons
-post_hoc_scheffe <- PostHocTest(res.aov, which=NULL, "scheffe") 
+
+# Analyze the main effect of each factor and also the interaction effect
+aov <- aov(Entry_Speed ~ Group*Keyboard*Trial*Condition + Error(Participant/(Keyboard*Trial*Condition)), ordered_data)
+summary(aov) 
+
+# Analyze only the main effect of each factor
+aov <- aov(Entry_Speed ~ Group+Keyboard+Trial+Condition + Error(Participant/(Keyboard+Trial+Condition)), ordered_data)
+summary(aov) 
+
+
+# POST HOC COMPARISONS
+# Compared the keyboard layout first
+model = aov(Entry_Speed~Keyboard, data=ordered_data)
+summary(model)
+post_hoc_scheffe <- PostHocTest(model, which=NULL, "scheffe") 
+print(post_hoc_scheffe)#Print the results of the Scheffé test
+
+# Compared the trial results
+model = aov(Entry_Speed~Trial, data=ordered_data)
+summary(model)
+post_hoc_scheffe <- PostHocTest(model, which=NULL, "scheffe") 
 print(post_hoc_scheffe)#Print the results of the Scheffé test
