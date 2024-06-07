@@ -8,7 +8,7 @@ cat("\f")                       # clear console
 rm(list = ls(all.names = TRUE)) # clear environment
 
 # Install necessary libraries if not installed yet
-necessary_packages <- c("plyr", "dplyr", "rstatix", "ggplot2")
+necessary_packages <- c("plyr", "dplyr", "rstatix", "ggplot2", "gt", "webshot", "webshot2")
 for (pkg in necessary_packages) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     install.packages(pkg)
@@ -20,6 +20,9 @@ library(plyr)
 library(dplyr)
 library(rstatix)
 library(ggplot2)
+library(gt)
+library(webshot)
+library(webshot2)
 
 # Obtain current directory path
 root_dir <- getwd()
@@ -31,13 +34,10 @@ sd2_files <- list.files(path = root_dir, pattern = "\\.sd2$", recursive = TRUE, 
 data_list <- list() # Here will go the .sd2 files data
 
 # Read each .sd2 file and adding the data to the data_list
-i <- 0
 for (file in sd2_files) {
-  print(i)
   data <- read.csv(file)
-  print(data)
+  #print(data)
   data_list[[length(data_list) + 1]] <- data
-  i <- i+1
 }
 
 # Merge all the files in the same data set
@@ -69,11 +69,13 @@ print(filtered_data)
 ordered_data <- filtered_data %>%
   arrange(Condition, Keyboard, Trial) %>%
   rename(Entry_Speed = Speed_.wpm.)
-  
+
 # Transform the categorical information to factors
 ordered_data$Keyboard <- factor(ordered_data$Keyboard)
 ordered_data$Trial <- factor(ordered_data$Trial)
 ordered_data$Participant <- factor(ordered_data$Participant)
+ordered_data$Group <- factor(ordered_data$Group)
+ordered_data$Condition <- factor(ordered_data$Condition)
 
 #Print for check data structure
 print(str(ordered_data))
@@ -117,7 +119,7 @@ library(rstatix)
 # ANOVA test to evaluate the effect of the group, keyboard and trial combination on the entry_speed
 res.aov = anova_test(
   data = ordered_data,
-  formula = Entry_Speed ~ Group*Keyboard*Trial + Error(Participant/(Keyboard*Trial)),
+  formula = Entry_Speed ~ Group*Keyboard*Trial*Condition + Error(Participant/(Keyboard*Trial*Condition)),
   detailed=TRUE
 )
 
@@ -126,11 +128,8 @@ anova_table <- get_anova_table(res.aov)
 print(anova_table)
 
 # Post hoc tests
-# Model creation
-model <- aov(Entry_Speed ~ Keyboard, data = ordered_data)
-summary(model)# Print of the model
 # need the DescTools library to use PostHocTest function
 library(DescTools)
 # do post hoc comparisons
-post_hoc_scheffe <- PostHocTest(model, which=NULL, "scheffe") 
+post_hoc_scheffe <- PostHocTest(res.aov, which=NULL, "scheffe") 
 print(post_hoc_scheffe)#Print the results of the Scheffé test
