@@ -79,13 +79,15 @@ ordered_data$Group <- factor(ordered_data$Group)
 ordered_data$Condition <- factor(ordered_data$Condition)
 
 #Print for check data structure
-print(str(ordered_data))
+print(ordered_data)
 
 # Visualize the data with a boxplot for visualise the destribution of 
 # the entry_speed for each keyboard and group, divided by the Trial
 ggplot(ordered_data, aes(x = Keyboard, y = Entry_Speed, color = Group)) +
   geom_boxplot() +
-  facet_wrap(~ Trial)
+  facet_wrap(~ Trial) +
+  labs(title = "Entry Speed by Keyboard, Group, and Trial") +
+  theme_minimal()
 
 # Check for outliers for each combination of group, keyboard and trial
 outliers <- ordered_data %>%
@@ -93,20 +95,29 @@ outliers <- ordered_data %>%
   identify_outliers(Entry_Speed)
 
 print(outliers)
+#extreme_outliers <- outliers %>% filter(is.extreme == TRUE)
 
-extreme_outliers <- outliers %>% filter(is.extreme == TRUE)
+hist(ordered_data$Entry_Speed,
+     xlab = "Entry Speed",
+     main = "Histogram of Entry Speed"
+)
 
 # Remove extreme outliers
-clean_data <- ordered_data %>% 
-  anti_join(extreme_outliers, by = c("Participant", "Group", "Keyboard", "Trial", "Condition"))
-print(clean_data)
+#removing outliars
+lower_bound <- quantile(ordered_data$Entry_Speed, 0.025)
+upper_bound <- quantile(ordered_data$Entry_Speed, 0.975)
+lower_bound
+upper_bound
+outlier_ind <- which(ordered_data$Entry_Speed < lower_bound | ordered_data$Entry_Speed > upper_bound)
+ordered_data[outlier_ind, "Entry_Speed"]
 
+clean_data <- ordered_data
 
 # outliers_gt <- gt(outliers)#Crear una tabla gt para los outliers
 # gtsave(outliers_gt, "outliers_table.png") # Guardar la tabla como una imagen
 
 # Normality assumption with Shapiro-Wilk
-normality_test <- ordered_data %>%
+normality_test <- clean_data %>%
   group_by(Group, Keyboard, Trial) %>%
   shapiro_test(Entry_Speed)
 
@@ -116,7 +127,7 @@ print(normality_test)
 
 
 # Homogeneity of variances assumption between groups using the Levene test
-levene_test <- ordered_data %>%
+levene_test <- clean_data %>%
   levene_test(Entry_Speed ~ Group * Keyboard * Trial)
 
 print(levene_test)
@@ -124,35 +135,29 @@ print(levene_test)
 # gtsave(levene_test_gt, "levene_test.png") 
 
 # ANOVA test to evaluate the effect of the group, keyboard and trial combination on the entry_speed
-res.aov = anova_test(
-  data = ordered_data,
-  formula = Entry_Speed ~ Group*Keyboard*Trial*Condition + Error(Participant/(Keyboard*Trial*Condition)),
-  detailed=TRUE
+res.aov <- anova_test(
+  data = clean_data,
+  formula = Entry_Speed ~ Group * Keyboard * Trial * Condition + Error(Participant/(Keyboard * Trial * Condition)),
+  detailed = TRUE
 )
 
-# Get ANOVA table, print in a shorter way the same as the code below
+# Get ANOVA table
 anova_table <- get_anova_table(res.aov)
 print(anova_table)
 
-
 # Analyze the main effect of each factor and also the interaction effect
-aov <- aov(Entry_Speed ~ Group*Keyboard*Trial*Condition + Error(Participant/(Keyboard*Trial*Condition)), ordered_data)
-summary(aov) 
-
-# Analyze only the main effect of each factor
-aov <- aov(Entry_Speed ~ Group+Keyboard+Trial+Condition + Error(Participant/(Keyboard+Trial+Condition)), ordered_data)
-summary(aov) 
-
+aov <- aov(Entry_Speed ~ Group * Keyboard * Trial * Condition + Error(Participant/(Keyboard * Trial * Condition)), clean_data)
+summary(aov)
 
 # POST HOC COMPARISONS
 # Compared the keyboard layout first
-model = aov(Entry_Speed~Keyboard, data=ordered_data)
-summary(model)
-post_hoc_scheffe <- PostHocTest(model, which=NULL, "scheffe") 
-print(post_hoc_scheffe)#Print the results of the Scheffé test
+model_keyboard = aov(Entry_Speed~Keyboard, data=clean_data)
+summary(model_keyboard)
+post_hoc_scheffe_keyboard <- PostHocTest(model_keyboard, which=NULL, "scheffe") 
+print(post_hoc_scheffe_keyboard)#Print the results of the Scheffé test
 
 # Compared the trial results
-model = aov(Entry_Speed~Trial, data=ordered_data)
-summary(model)
-post_hoc_scheffe <- PostHocTest(model, which=NULL, "scheffe") 
-print(post_hoc_scheffe)#Print the results of the Scheffé test
+model_trial = aov(Entry_Speed~Trial, data=clean_data)
+summary(model_trial)
+post_hoc_scheffe_trial <- PostHocTest(model_trial, which=NULL, "scheffe") 
+print(post_hoc_scheffe_trial)#Print the results of the Scheffé test
