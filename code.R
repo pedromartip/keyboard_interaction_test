@@ -113,8 +113,8 @@ ordered_data[outlier_ind, "Entry_Speed"]
 
 clean_data <- ordered_data
 
-# outliers_gt <- gt(outliers)#Crear una tabla gt para los outliers
-# gtsave(outliers_gt, "outliers_table.png") # Guardar la tabla como una imagen
+# outliers_gt <- gt(outliers)# Create a table for gt outliers
+# gtsave(outliers_gt, "outliers_table.png") # Save table of otliers
 
 # Normality assumption with Shapiro-Wilk
 normality_test <- clean_data %>%
