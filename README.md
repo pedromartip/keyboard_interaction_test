@@ -10,6 +10,12 @@ This repository contains an R script designed to analyze keyboard entry speeds f
 - `normality_test.png`: Visualization showing the results of the Shapiro-Wilk test for normality.
 - `outliers_table.png`: A table generated using `gt` showing identified outliers in the dataset.
 
+### Images
+- ![Comprehensive plot of entry speeds](images/image.png "Entry Speed by Keyboard, Group, and Trial")
+- ![Levene's Test Results](images/levene_test.png "Levene's Test for Homogeneity of Variances")
+- ![Shapiro-Wilk Test Results](images/normality_test.png "Shapiro-Wilk Test for Normality")
+- ![Outliers Table](images/outliers_table.png "Table of Outliers")
+
 ### How to Run the Script
 1. **Set Up Your Environment:**
    Ensure that RStudio is installed on your machine. If not, download and install it from [RStudio's official website](https://www.rstudio.com/products/rstudio/download/).
